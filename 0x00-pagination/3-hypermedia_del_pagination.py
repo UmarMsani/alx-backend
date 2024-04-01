@@ -43,7 +43,7 @@ class Server:
             self,
             index: int = None,
             page_size: int = 10
-            ) -> Dict[str, Union[int, List[List]]]:
+            ) -> Dict:
         """
         Returns a dictionary containing hypermedia pagination information.
 
@@ -54,21 +54,24 @@ class Server:
         Returns:
             Dict[str, Union[int, List[List]]]: A dictionary containing info.
         """
-        dataset_length = len(self.indexed_dataset())
-        if index is None:
-            index = 0
+        dataset = self.indexed_dataset()
+        data_length = len(dataset)
+        assert 0 <= index < data_length
+        response = {}
+        data = []
+        response['index'] = index
+        for i in range(page_size):
+            while True:
+                curr = dataset.get(index)
+                index += 1
+                if curr is not None:
+                    break
+            data.append(curr)
+
+        response['data'] = data
+        response['page_size'] = len(data)
+        if dataset.get(index):
+            response['next_index'] = index
         else:
-            assert index < dataset_length, "Index out of range"
-
-        next_index = min(index + page_size, dataset_length)
-        data = [
-            self.indexed_dataset().get(i, [])
-            for i in range(index, next_index)
-            ]
-
-        return {
-            "index": index,
-            "next_index": next_index,
-            "page_size": page_size,
-            "data": data
-        }
+            response['next_index'] = None
+        return response
