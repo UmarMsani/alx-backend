@@ -59,9 +59,12 @@ class Server:
             index = 0
         else:
             assert index < dataset_length, "Index out of range"
-    
+
         next_index = min(index + page_size, dataset_length)
-        data = [self.indexed_dataset().get(i, []) for i in range(index, next_index)]
+        data = [
+            self.indexed_dataset().get(i, [])
+            for i in range(index, next_index)
+            ]
 
         return {
             "index": index,
