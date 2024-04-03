@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """ BaseCaching module
 """
+from collections import OrderedDict
 from base_caching import BaseCaching
 
 
 class MRUCache(BaseCaching):
     """
     Caching system with MRU (Most Recently Used) eviction policy.
-    This class inherits from BaseCaching and implements a caching
     """
 
     def __init__(self):
@@ -15,6 +15,7 @@ class MRUCache(BaseCaching):
         Initialize the MRUCache object.
         """
         super().__init__()
+        self.cache_data = OrderedDict()
 
     def put(self, key, item):
         """
@@ -24,11 +25,15 @@ class MRUCache(BaseCaching):
             key: The key of the item.
             item: The value associated with the key.
         """
-        if key is not None and item is not None:
-            if len(self.cache_data) >= self.MAX_ITEMS:
-                mru_key = max(self.cache_data, key=self.cache_data.get)
-                del self.cache_data[mru_key]
+        if key is None or item is None:
+            return
+        if key not in self.cache_data:
+            if len(self.cache_data) + 1 > BaseCaching.MAX_ITEMS:
+                mru_key, _ = self.cache_data.popitem(False)
                 print("DISCARD:", mru_key)
+            self.cache_data[key] = item
+            self.cache_data.move_to_end(key, last=False)
+        else:
             self.cache_data[key] = item
 
     def get(self, key):
@@ -42,7 +47,6 @@ class MRUCache(BaseCaching):
             The value associated with the key,
             or None if the key doesn't exist.
         """
-        if key is not None:
-            if key in self.cache_data:
-                return self.cache_data[key]
-        return None
+        if key is not None and key in self.cache_data:
+            self.cache_data.move_to_end(key, last=False)
+        return self.cache_data.get(key, None)
